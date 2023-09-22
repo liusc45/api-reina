@@ -3,17 +3,17 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/dist/api"
+      "destination": "/dist"
     },
     {
-      "source": "/api/(.*)",
-      "destination": "/dist/api"
+      "source": "/(.*)",
+      "destination": "/dist"
     }
   ],
 
   "builds": [
     {
-      "src": "dist/api/index.js",
+      "src": "dist/index.js",
       "use": "@vercel/node",
       "config": { "includeFiles": ["dist/**"] }
     }

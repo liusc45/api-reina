@@ -6,5 +6,5 @@ export default (book: string): IBook => {
   if (!books.includes(book)) {
     throw boom.notFound(`Book '${book}' not found`)
   }
-  return require(`./../db/${book}`)
+  return require(`./db/${book}`)
 }
