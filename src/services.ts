@@ -31,7 +31,7 @@ const getVerse = (book: string, chapter: number, verse: number): IVerseResponse 
   const db = getDb(book)
   if (chapter < 1 || chapter > db.default.length - 1) {
     throw boom.notFound(`Chapter '${chapter}' out of range`)
-  } else if (verse < 1 || verse > db.default[chapter].length - 1) {
+  } else if (verse < 1 || verse > db.default[chapter].length) {
     throw boom.notFound(`Verse '${verse}' out of range`)
   }
 

@@ -34,7 +34,7 @@ const getVerse = (book, chapter, verse) => {
     if (chapter < 1 || chapter > db.default.length - 1) {
         throw boom_1.default.notFound(`Chapter '${chapter}' out of range`);
     }
-    else if (verse < 1 || verse > db.default[chapter].length - 1) {
+    else if (verse < 1 || verse > db.default[chapter].length) {
         throw boom_1.default.notFound(`Verse '${verse}' out of range`);
     }
     return {
