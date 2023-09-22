@@ -1,14 +1,16 @@
 import express from 'express'
 import 'dotenv/config'
+import router from './router'
+import { errorLogger, errorHandler, boomErrorHandler } from './errors'
 
 const app = express()
-const PORT = process.env.PORT
+const PORT = process.env.PORT ?? 3000
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-}
-)
+router(app)
+app.use(errorLogger)
+app.use(boomErrorHandler)
+app.use(errorHandler)
 
 app.listen(PORT, () => {
-  console.log(`[server] Running api on http://localhost:${PORT}`)
+  console.log(`[server] Running API on http://localhost:${PORT}`)
 })
