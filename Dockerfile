@@ -1,33 +1,58 @@
-# Stage 1: install dependencies
+# Etapa de dependencias
 FROM node:20-bookworm-slim AS deps
-WORKDIR /app
-COPY package*.json ./
-ARG NODE_ENV
-ENV NODE_ENV=$NODE_ENV
-RUN npm install
 
-# Stage 2: build
-FROM node:20 AS builder
 WORKDIR /app
+
+COPY package*.json ./
+
+# Instalar todas las dependencias incluyendo devDependencies
+RUN npm ci
+
+# Etapa de construcción
+FROM node:20-bookworm-slim AS builder
+
+WORKDIR /app
+
+# Copiar dependencias y configuración
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Asegurar que TypeScript esté disponible (el error indica que no encuentra tsc)
+RUN npm install -g typescript
+
+# Ejecutar build
 RUN npm run build
 
-# Stage 3: run
-FROM node:20-alpine
-WORKDIR /app
-# Copia todo el contenido del build, sin asumir una estructura específica
-COPY --from=builder /app/. ./
+# Etapa de producción
+FROM node:20-alpine AS production
 
-# Exponer el puerto en el que escucha la aplicación
+# Crear usuario no privilegiado
+RUN addgroup -S nodeapp && \
+    adduser -S -G nodeapp nodeuser && \
+    mkdir -p /app && \
+    chown -R nodeuser:nodeapp /app
+
+WORKDIR /app
+
+# Copiar package.json y package-lock.json
+COPY package*.json ./
+
+# Instalar solo dependencias de producción
+RUN npm ci --only=production && \
+    npm cache clean --force
+
+# Copiar los archivos compilados desde la etapa de construcción
+COPY --from=builder /app/dist ./dist
+
+# Cambiar al usuario no privilegiado
+USER nodeuser
+
+# Exponer el puerto necesario (ajusta según tu aplicación)
 EXPOSE 3000
 
-# Crear usuario no-root para ejecutar la aplicación
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001 -G nodejs
-USER nextjs
+# Configurar health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
-# Healthcheck para verificar que la aplicación está funcionando
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
-
-CMD ["npm", "run", "start"]
+# Comando para iniciar la aplicación
+CMD ["node", "dist/index.js"]
