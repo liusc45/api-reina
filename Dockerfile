@@ -5,8 +5,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# Instalar todas las dependencias incluyendo devDependencies
-RUN npm ci
+# Usar npm install en lugar de npm ci porque no hay package-lock.json
+RUN npm install
 
 # Etapa de construcción
 FROM node:20-bookworm-slim AS builder
@@ -34,11 +34,11 @@ RUN addgroup -S nodeapp && \
 
 WORKDIR /app
 
-# Copiar package.json y package-lock.json
+# Copiar package.json
 COPY package*.json ./
 
 # Instalar solo dependencias de producción
-RUN npm ci --only=production && \
+RUN npm install --only=production && \
     npm cache clean --force
 
 # Copiar los archivos compilados desde la etapa de construcción
